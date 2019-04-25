@@ -1,2 +1,2 @@
 # Examples
-Example base ARM templates
+Same ARM templates for basic IaaS resources.
