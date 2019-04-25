@@ -5,7 +5,7 @@
         "tags": {
             "value": {
                 "owner": "luke.fussell@microsoft.com",
-                "costCenter": "10512",
+                "costCenter": "10511",
                 "environment": "Production",
                 "application": "Example App"
             }
