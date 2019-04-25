@@ -1,0 +1,20 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tags": {
+            "value": {
+                "owner": "luke.fussell@microsoft.com",
+                "costCenter": "10512",
+                "environment": "Production",
+                "application": "Example App"
+            }
+        },
+        "vnetName": {
+            "value": "thurs-vnet"
+        },
+        "vNetResourceGroup": {
+            "value": "thurs-net-rg"
+        }
+    }
+}

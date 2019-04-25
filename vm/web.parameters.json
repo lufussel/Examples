@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tags": {
+            "value": {
+                "owner": "luke.fussell@microsoft.com",
+                "costCenter": "10512",
+                "environment": "Production",
+                "application": "Example App"
+            }
+        },
+        "vmName": {
+            "value": "thurs-web"
+        },
+        "numberOfVMs": {
+            "value": 2
+        },
+        "vmSize": {
+            "value": "Standard_D1_v2"
+        },
+        "vnetResourceGroup": {
+            "value": "thurs-net-rg"
+        },
+        "vnetName": {
+            "value": "thurs-vnet"
+        },
+        "subnetName": {
+            "value": "web"
+        },
+        "defaultUsername": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/93506e47-1ba5-476d-a804-1a01468e8a1f/resourceGroups/new-euw-hub-ops-rg/providers/Microsoft.KeyVault/vaults/neweuwkeyvaulttest"
+                },
+                "secretName": "vmAdminUsername"
+            }
+        },
+        "defaultPassword": {
+            "reference": {
+                "keyVault": {
+                    "id": "/subscriptions/93506e47-1ba5-476d-a804-1a01468e8a1f/resourceGroups/new-euw-hub-ops-rg/providers/Microsoft.KeyVault/vaults/neweuwkeyvaulttest"
+                },
+                "secretName": "vmAdminPassword"
+            }
+        }
+    }
+}

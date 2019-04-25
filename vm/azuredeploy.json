@@ -1,0 +1,197 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tags": {
+            "type": "object",
+            "defaultValue": {
+                "owner": "luke.fussell@microsoft.com",
+                "costCenter": "10512",
+                "environment": "Production",
+                "application": "Example App"
+            },
+            "metadata": {
+                "description": "Tags to apply to resources"
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "Prefix for the VMs"
+            },
+            "defaultValue": "oct-hub-web"
+        },
+        "numberOfVms": {
+            "type": "int",
+            "defaultValue": 2,
+            "metadata": {
+                "description": "Number of VMs to deploy"
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D1_v2",
+            "allowedValues": [
+                "Standard_D1_v2",
+                "Standard_D2_v3",
+                "Standard_D4_v3"
+            ],
+            "metadata": {
+                "description": "Size for the virtual machine"
+            }
+        },
+        "windowsOSVersion": {
+            "type": "string",
+            "defaultValue": "2019-Datacenter",
+            "allowedValues": [
+                "2019-Datacenter",
+                "2016-Datacenter",
+                "2012-R2-Datacenter",
+                "2012-Datacenter",
+                "2008-R2-SP1"
+            ],
+            "metadata": {
+                "description": "The Windows version for the VM. This will pick a fully patched image of this given Windows version."
+            }
+        },
+        "vnetResourceGroup": {
+            "type": "string",
+            "defaultValue": "new-euw-hub-net-rg",
+            "metadata": {
+                "description": "Resource group for the vnet."
+            }
+        },
+        "vnetName": {
+            "type": "string",
+            "defaultValue": "new-euw-hub-vnet",
+            "metadata": {
+                "description": "Name of the virtual network"
+            }
+        },
+        "subnetName": {
+            "type": "string",
+            "defaultValue": "web",
+            "metadata": {
+                "description": "Name of the subnet"
+            }
+        },
+        "defaultUsername": {
+            "type": "string"
+        },
+        "defaultPassword": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "windowsImageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "[parameters('windowsOSVersion')]",
+            "version": "latest"
+        },
+        "vnetID": "[resourceId(parameters('vnetResourceGroup'), 'Microsoft.Network/virtualNetworks/', parameters('vnetName'))]",
+        "subnetRef": "[concat(variables('vnetID'), '/subnets/', parameters('subnetName'))]",
+        "vmName": "[concat(parameters('vmName'), '-vm')]",
+        "storageAccountType": "Standard_LRS",
+        "storageAccountName": "[toLower(concat('bd', parameters('subnetName'), uniquestring(resourceGroup().id)))]"
+    },
+    "resources": [
+        {
+            "name": "[variables('storageAccountName')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2017-06-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "CostCenter": "[parameters('tags').costCenter]",
+                "ResourceOwner": "[parameters('tags').owner]",
+                "Environment": "[parameters('tags').environment]",
+                "Application": "[parameters('tags').application]"
+            },
+            "sku": {
+                "name": "[variables('storageAccountType')]"
+            },
+            "kind": "Storage",
+            "properties": {}
+        },
+        {
+            "name": "[concat(variables('vmName'), copyIndex(1), '-nic')]",
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2017-06-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "CostCenter": "[parameters('tags').costCenter]",
+                "ResourceOwner": "[parameters('tags').owner]",
+                "Environment": "[parameters('tags').environment]",
+                "Application": "[parameters('tags').application]"
+            },
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[variables('subnetRef')]"
+                            }
+                        }
+                    }
+                ]
+            },
+            "copy": {
+                "name": "nicCopy",
+                "count": "[parameters('numberOfVms')]"
+            }
+        },
+        {
+            "name": "[concat(variables('vmName'), copyIndex(1))]",
+            "type": "Microsoft.Compute/virtualMachines",
+            "apiVersion": "2017-03-30",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "CostCenter": "[parameters('tags').costCenter]",
+                "ResourceOwner": "[parameters('tags').owner]",
+                "Environment": "[parameters('tags').environment]",
+                "Application": "[parameters('tags').application]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]",
+                "nicCopy"
+            ],
+            "properties": {
+                "hardwareProfile": {
+                    "vmSize": "[parameters('vmSize')]"
+                },
+                "osProfile": {
+                    "computerName": "[concat(variables('vmName'), copyIndex(1))]",
+                    "adminUsername": "[parameters('defaultUsername')]",
+                    "adminPassword": "[parameters('defaultPassword')]"
+                },
+                "storageProfile": {
+                    "imageReference": "[variables('windowsImageReference')]",
+                    "osDisk": {
+                        "name": "[concat(variables('vmName'), copyIndex(1), '-osDisk')]",
+                        "createOption": "FromImage"
+                    }
+                },
+                "networkProfile": {
+                    "networkInterfaces": [
+                        {
+                            "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(variables('vmName'),copyindex(1),'-nic'))]"
+                        }
+                    ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat(reference(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2016-01-01').primaryEndpoints.blob)]"
+                    }
+                }
+            },
+            "copy": {
+                "name": "virtualMachineCopy",
+                "count": "[parameters('numberOfVms')]"
+            }
+        }
+    ],
+    "outputs": {}
+}

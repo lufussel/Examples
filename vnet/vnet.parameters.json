@@ -1,0 +1,54 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "tags": {
+            "value": {
+                "owner": "luke.fussell@microsoft.com",
+                "costCenter": "10512",
+                "environment": "Production",
+                "application": "Example App"
+            }
+        },
+        "nsgResourceGroup": {
+            "value": "thurs-nsgs-rg"
+        },
+        "vnet": {
+            "value": {
+                "name": "thurs-vnet",
+                "resourceGroup": "thurs-net-rg",
+                "addressPrefixes": [
+                    "10.32.0.0/16"
+                ],
+                "dnsServerAddresses": [],
+                "subnets": [
+                    {
+                        "name": "GatewaySubnet",
+                        "addressPrefix": "10.32.0.0/24",
+                        "nsg": "allow-rdp"
+                    },
+                    {
+                        "name": "domain",
+                        "addressPrefix": "10.32.1.0/24",
+                        "nsg": "allow-domain"
+                    },
+                    {
+                        "name": "web",
+                        "addressPrefix": "10.32.2.0/24",
+                        "nsg": "allow-httphttps"
+                    },
+                    {
+                        "name": "app",
+                        "addressPrefix": "10.32.3.0/24",
+                        "nsg": "allow-httphttps"
+                    },
+                    {
+                        "name": "sql",
+                        "addressPrefix": "10.32.4.0/24",
+                        "nsg": "allow-sqlserver"
+                    }
+                ]
+            }
+        }
+    }
+}
